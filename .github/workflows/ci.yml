@@ -12,6 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: backpackapp/build:v0.30.1
+    # GitHub sets HOME=/github/home, but the image installed rust under /root.
+    # Point rustup/cargo at the image's toolchains so anchor build / clippy work.
+    env:
+      RUSTUP_HOME: /root/.rustup
+      CARGO_HOME: /root/.cargo
     steps:
       - uses: actions/checkout@v4
 
@@ -23,19 +28,11 @@ jobs:
         # engines >=20. --ignore-engines lets the install proceed (they run fine).
         run: yarn install --ignore-engines
 
-      - name: Diagnose Rust env
+      - name: Use the image's Rust toolchain
         run: |
-          set +e
-          echo "HOME=$HOME CARGO_HOME=$CARGO_HOME RUSTUP_HOME=$RUSTUP_HOME"
-          echo "PATH=$PATH"
-          echo "-- which --"; command -v rustc cargo rustup cargo-build-sbf anchor
-          echo "-- rustup show --"; rustup show
-          for d in /root /usr/local /home/runner /github/home; do
-            echo "[$d]"; ls -la "$d/.rustup/toolchains" 2>/dev/null; ls -la "$d/.cargo/bin/rustc" 2>/dev/null
-          done
-          echo "-- /usr/local/rustup --"; ls -la /usr/local/rustup/toolchains 2>/dev/null
-          echo "-- /usr/local/cargo/bin --"; ls /usr/local/cargo/bin 2>/dev/null | head
-          true
+          rustup default stable
+          rustup component add clippy
+          rustc --version && cargo --version
 
       - name: anchor build
         run: anchor build
