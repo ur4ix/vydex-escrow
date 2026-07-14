@@ -44,8 +44,7 @@ jobs:
         # edition-2021 releases, then downgrade the lockfile header to v3.
         run: |
           cargo generate-lockfile
-          cargo update -p proc-macro-crate --precise 3.1.0
-          cargo update -p zeroize_derive --precise 1.4.2
+          cargo update -p proc-macro-crate@3.5.0 --precise 3.1.0
           sed -i 's/^version = 4$/version = 3/' Cargo.lock
           head -n 3 Cargo.lock
 
