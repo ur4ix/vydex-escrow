@@ -28,18 +28,14 @@ jobs:
         # engines >=20. --ignore-engines lets the install proceed (they run fine).
         run: yarn install --ignore-engines
 
-      - name: Use the image's Rust toolchain
+      - name: Install a current Rust host toolchain
+        # The image's stable is 1.79 (no edition-2024), but several build-time deps
+        # now require it. Fetch the current stable for the HOST build (proc macros,
+        # cargo metadata); on-chain code is still built by Solana platform-tools.
         run: |
+          rustup toolchain install stable --profile minimal --component clippy
           rustup default stable
-          rustup component add clippy
           rustc --version && cargo --version
-
-      - name: Lock transitive crates to platform-tools-compatible versions
-        # Solana 1.18's build cargo can't parse edition-2024 manifests; hold the
-        # offending transitive crates at their last edition-2021 release.
-        run: |
-          cargo generate-lockfile
-          cargo update -p zeroize_derive --precise 1.4.2
 
       - name: anchor build
         run: anchor build
