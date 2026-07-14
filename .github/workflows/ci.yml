@@ -43,9 +43,6 @@ jobs:
         # Then downgrade the lockfile header to v3 (platform-tools reads v3 only).
         run: |
           cargo generate-lockfile
-          echo "=== who pulls block-buffer / new crypto ==="
-          cargo tree -i block-buffer 2>&1 | head -40 || true
-          cargo tree -i digest 2>&1 | head -40 || true
           sed -i 's/^version = 4$/version = 3/' Cargo.lock
           head -n 3 Cargo.lock
 
