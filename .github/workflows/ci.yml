@@ -43,8 +43,12 @@ jobs:
         # Then downgrade the lockfile header to v3 (platform-tools reads v3 only).
         run: |
           cargo generate-lockfile
+          echo "===TREE-START==="
+          cargo tree -e normal,build -i block-buffer@0.12.1 2>&1 | head -60
+          echo "===TREE-MID==="
+          cargo tree -e normal,build -i digest@0.11.3 2>&1 | head -60
+          echo "===TREE-END==="
           sed -i 's/^version = 4$/version = 3/' Cargo.lock
-          head -n 3 Cargo.lock
 
       - name: anchor build
         run: anchor build
