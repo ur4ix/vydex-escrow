@@ -23,6 +23,12 @@ jobs:
         # engines >=20. --ignore-engines lets the install proceed (they run fine).
         run: yarn install --ignore-engines
 
+      - name: Select a default Rust toolchain
+        # The backpack image ships a toolchain but leaves no rustup default set,
+        # so anchor build / clippy fail with "could not choose a version of cargo".
+        # Use the toolchain already installed in the image (compatible with 0.30.1).
+        run: rustup default "$(rustup toolchain list | grep -m1 . | awk '{print $1}')"
+
       - name: anchor build
         run: anchor build
 
