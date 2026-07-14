@@ -1,0 +1,11 @@
+# cargo-audit configuration.
+#
+# These advisories are in curve25519-dalek / ed25519-dalek, which are pinned
+# transitively by the Solana SDK — not fixable from this repo without a Solana
+# upgrade, and not reachable in an exploitable way from the escrow program.
+# Everything else must pass. (CI also passes these via --ignore for certainty.)
+[advisories]
+ignore = [
+  "RUSTSEC-2024-0344", # curve25519-dalek 3.x timing variability (Solana-pinned)
+  "RUSTSEC-2022-0093", # ed25519-dalek 1.x double-sign oracle (Solana-pinned)
+]
