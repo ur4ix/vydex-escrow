@@ -43,6 +43,9 @@ jobs:
         # Then downgrade the lockfile header to v3 (platform-tools reads v3 only).
         run: |
           cargo generate-lockfile
+          # A few edition-2024 crates declare no rust-version, so the MSRV resolver
+          # can't exclude them — pin those explicitly to their last edition-2021 rel.
+          cargo update -p block-buffer@0.12.1 --precise 0.10.4
           sed -i 's/^version = 4$/version = 3/' Cargo.lock
           head -n 3 Cargo.lock
 
