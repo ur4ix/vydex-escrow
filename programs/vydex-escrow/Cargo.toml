@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Vydex escrow — one isolated PDA vault per deal, USDC on Solana"
 edition = "2021"
 license = "MIT"
+# Solana 1.18 platform-tools rustc; drives the MSRV-aware resolver (see
+# .cargo/config.toml) so transitive deps stay edition-2021 and parseable.
+rust-version = "1.75.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]

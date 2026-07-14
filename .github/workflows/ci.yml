@@ -38,13 +38,11 @@ jobs:
           rustc --version && cargo --version
 
       - name: Resolve deps for Solana 1.18 platform-tools
-        # platform-tools cargo (1.75) parses every manifest in the graph and can't
-        # handle edition-2024 build deps. Hold the two proc-macro chains that pull
-        # them (proc-macro-crate → toml_edit 1.x; zeroize_derive 1.5) at their last
-        # edition-2021 releases, then downgrade the lockfile header to v3.
+        # The MSRV-aware resolver (.cargo/config.toml + rust-version=1.75) keeps the
+        # whole tree on edition-2021 versions the platform-tools cargo can parse.
+        # Then downgrade the lockfile header to v3 (platform-tools reads v3 only).
         run: |
           cargo generate-lockfile
-          cargo update -p proc-macro-crate@3.5.0 --precise 3.1.0
           sed -i 's/^version = 4$/version = 3/' Cargo.lock
           head -n 3 Cargo.lock
 
