@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+# Uses the prebuilt Anchor toolchain image so build + tests run on a real Linux
+# toolchain (the same image can be used locally: `docker run --rm -v "$PWD":/w
+# -w /w backpackapp/build:v0.30.1 bash -lc "yarn install && anchor build && anchor test"`).
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    container:
+      image: backpackapp/build:v0.30.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync program id (replaces the placeholder declare_id!)
+        run: anchor keys sync
+
+      - name: Install JS deps
+        run: yarn install --frozen-lockfile || yarn install
+
+      - name: anchor build
+        run: anchor build
+
+      - name: clippy (deny warnings)
+        run: cargo clippy --all-targets -- -D warnings
+
+      # Tests run on solana-bankrun (loads the built program, warps the clock for
+      # the timeout scenarios) — no local validator needed.
+      - name: tests (bankrun)
+        run: yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: cargo audit
+        run: cargo audit

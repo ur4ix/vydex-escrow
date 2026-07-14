@@ -1,0 +1,29 @@
+{
+  "name": "vydex-escrow",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "Vydex escrow — Anchor program + tests (one isolated PDA vault per deal)",
+  "scripts": {
+    "test": "anchor test",
+    "lint": "prettier \"tests/**/*.ts\" \"scripts/**/*.ts\" --check",
+    "lint:fix": "prettier \"tests/**/*.ts\" \"scripts/**/*.ts\" -w"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/spl-token": "^0.4.6",
+    "@solana/web3.js": "^1.95.0"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.5",
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "anchor-bankrun": "^0.5.0",
+    "chai": "^4.4.1",
+    "mocha": "^10.3.0",
+    "prettier": "^3.2.0",
+    "solana-bankrun": "^0.4.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -1,0 +1,14 @@
+.anchor
+target
+node_modules
+test-ledger
+dist
+**/*.rs.bk
+.DS_Store
+
+# never commit keypairs or secrets
+*.pem
+keypairs/*.json
+.env
+.env.*
+!.env.example

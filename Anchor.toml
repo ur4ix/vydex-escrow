@@ -1,0 +1,24 @@
+[toolchain]
+anchor_version = "0.30.1"
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+vydex_escrow = "Vydx111111111111111111111111111111111111111"
+
+[programs.devnet]
+vydex_escrow = "Vydx111111111111111111111111111111111111111"
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "Localnet"
+wallet = "~/.config/solana/id.json"
+
+# Run `anchor keys sync` once to replace the placeholder program id above and in
+# lib.rs with the keypair generated at target/deploy/vydex_escrow-keypair.json.
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

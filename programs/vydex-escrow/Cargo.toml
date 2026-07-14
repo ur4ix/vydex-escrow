@@ -1,0 +1,24 @@
+[package]
+name = "vydex-escrow"
+version = "0.1.0"
+description = "Vydex escrow — one isolated PDA vault per deal, USDC on Solana"
+edition = "2021"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "vydex_escrow"
+
+[features]
+default = []
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+# NOTE: init-if-needed is intentionally NOT enabled — the program relies on
+# `init` (not init_if_needed) as a re-initialization guard. Do not add it.
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[dependencies]
+anchor-lang = "0.30.1"
+anchor-spl = "0.30.1"
