@@ -34,6 +34,13 @@ jobs:
           rustup component add clippy
           rustc --version && cargo --version
 
+      - name: Lock transitive crates to platform-tools-compatible versions
+        # Solana 1.18's build cargo can't parse edition-2024 manifests; hold the
+        # offending transitive crates at their last edition-2021 release.
+        run: |
+          cargo generate-lockfile
+          cargo update -p zeroize_derive --precise 1.4.2
+
       - name: anchor build
         run: anchor build
 
