@@ -23,15 +23,19 @@ jobs:
         # engines >=20. --ignore-engines lets the install proceed (they run fine).
         run: yarn install --ignore-engines
 
-      - name: Install & default a host Rust toolchain
-        # The image's rustup has no toolchain installed, so anchor build / clippy
-        # fail with "could not choose a version of cargo". Install a host toolchain
-        # compatible with Anchor 0.30.1 (the program itself is built with Solana's
-        # platform-tools regardless of this).
+      - name: Diagnose Rust env
         run: |
-          rustup toolchain install 1.79.0 --profile minimal --component clippy
-          rustup default 1.79.0
-          rustc --version
+          set +e
+          echo "HOME=$HOME CARGO_HOME=$CARGO_HOME RUSTUP_HOME=$RUSTUP_HOME"
+          echo "PATH=$PATH"
+          echo "-- which --"; command -v rustc cargo rustup cargo-build-sbf anchor
+          echo "-- rustup show --"; rustup show
+          for d in /root /usr/local /home/runner /github/home; do
+            echo "[$d]"; ls -la "$d/.rustup/toolchains" 2>/dev/null; ls -la "$d/.cargo/bin/rustc" 2>/dev/null
+          done
+          echo "-- /usr/local/rustup --"; ls -la /usr/local/rustup/toolchains 2>/dev/null
+          echo "-- /usr/local/cargo/bin --"; ls /usr/local/cargo/bin 2>/dev/null | head
+          true
 
       - name: anchor build
         run: anchor build
