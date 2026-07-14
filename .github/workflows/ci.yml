@@ -37,6 +37,15 @@ jobs:
           rustup default stable
           rustc --version && cargo --version
 
+      - name: Resolve deps, pin lockfile to v3
+        # The host cargo writes a v4 Cargo.lock, but Solana 1.18's platform-tools
+        # cargo only reads v3. Resolve with the host cargo (edition-2024 aware),
+        # then downgrade the lockfile header so platform-tools can read it.
+        run: |
+          cargo generate-lockfile
+          sed -i 's/^version = 4$/version = 3/' Cargo.lock
+          head -n 3 Cargo.lock
+
       - name: anchor build
         run: anchor build
 
