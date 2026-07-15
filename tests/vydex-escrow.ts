@@ -214,13 +214,24 @@ describe("vydex-escrow", () => {
       const amount = 50_000_000;
       const { escrow, vault } = await createDeal({ ...p, amount, instant: true });
 
-      // TEMP DEBUG: compare raw on-chain bytes vs the client's decoded view.
-      const rawAcc = await context.banksClient.getAccount(escrow);
-      const hex = Buffer.from(rawAcc!.data).toString("hex");
-      const dbg = await program.account.escrow.fetch(escrow);
-      console.log("DBG escrow:", escrow.toBase58());
-      console.log("DBG len:", rawAcc!.data.length, "raw:", hex);
-      console.log("DBG fetch status:", JSON.stringify(dbg.status), "deliveredAt:", dbg.deliveredAt.toString());
+      // TEMP DEBUG: what accounts/data does the client actually send?
+      const dbgIx = await program.methods
+        .approveAndRelease(new BN(0))
+        .accountsPartial({
+          config: configPda,
+          escrow,
+          vault,
+          buyer: p.buyer.publicKey,
+          seller: p.seller.publicKey,
+          buyerToken: p.buyerToken,
+          sellerToken: p.sellerToken,
+          feeVault,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .instruction();
+      console.log("DBG expected escrow:", escrow.toBase58());
+      console.log("DBG ix data:", Buffer.from(dbgIx.data).toString("hex"));
+      dbgIx.keys.forEach((k, i) => console.log(`DBG key[${i}] ${k.pubkey.toBase58()} signer=${k.isSigner} writable=${k.isWritable}`));
 
       const feeBefore = await balance(feeVault);
       await program.methods
