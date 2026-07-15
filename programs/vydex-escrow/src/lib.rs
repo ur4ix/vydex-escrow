@@ -191,13 +191,7 @@ pub mod vydex_escrow {
     // ------------------------------------------------------------------
     pub fn approve_and_release(ctx: Context<ApproveAndRelease>, tip_amount: u64) -> Result<()> {
         // TEMP DEBUG
-        msg!(
-            "DBGPROG escrow={} status={} order_id={} delivered_at={}",
-            ctx.accounts.escrow.key(),
-            ctx.accounts.escrow.status as u8,
-            ctx.accounts.escrow.order_id,
-            ctx.accounts.escrow.delivered_at
-        );
+        msg!("DBGPROG status={}", ctx.accounts.escrow.status as u8);
         require!(
             ctx.accounts.escrow.status == EscrowStatus::Delivered,
             EscrowError::InvalidStatus
