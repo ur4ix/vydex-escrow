@@ -4,51 +4,60 @@ on:
   push:
   pull_request:
 
-# Uses the prebuilt Anchor toolchain image so build + tests run on a real Linux
-# toolchain (the same image can be used locally: `docker run --rm -v "$PWD":/w
-# -w /w backpackapp/build:v0.30.1 bash -lc "yarn install && anchor build && anchor test"`).
+# No prebuilt Anchor image exists for 1.x, and the older ones ship Solana 1.18
+# platform-tools (rust 1.75) which cannot build today's edition-2024 crates.
+# So we install a current Rust + Agave + Anchor toolchain explicitly.
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    container:
-      image: backpackapp/build:v0.30.1
-    # GitHub sets HOME=/github/home, but the image installed rust under /root.
-    # Point rustup/cargo at the image's toolchains so anchor build / clippy work.
     env:
-      RUSTUP_HOME: /root/.rustup
-      CARGO_HOME: /root/.cargo
+      ANCHOR_VERSION: 1.1.2
     steps:
       - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: System deps for anchor-cli
+        run: sudo apt-get update && sudo apt-get install -y pkg-config build-essential libudev-dev
+
+      - name: Cache cargo (anchor-cli binary + registry)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-anchor-${{ env.ANCHOR_VERSION }}-${{ runner.os }}
+
+      - name: Install Solana (Agave)
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: |
+          if ! command -v anchor >/dev/null; then
+            cargo install anchor-cli --version "$ANCHOR_VERSION" --locked
+          fi
+
+      - name: Toolchain versions
+        run: |
+          rustc --version
+          solana --version
+          anchor --version
+          cargo-build-sbf --version || true
 
       - name: Sync program id (replaces the placeholder declare_id!)
         run: anchor keys sync
 
       - name: Install JS deps
-        # The backpack image ships Node 18, but some @solana/* codec deps declare
-        # engines >=20. --ignore-engines lets the install proceed (they run fine).
-        run: yarn install --ignore-engines
-
-      - name: Install a current Rust host toolchain
-        # The image's stable is 1.79 (no edition-2024), but several build-time deps
-        # now require it. Fetch the current stable for the HOST build (proc macros,
-        # cargo metadata); on-chain code is still built by Solana platform-tools.
-        run: |
-          rustup toolchain install stable --profile minimal --component clippy
-          rustup default stable
-          rustc --version && cargo --version
-
-      - name: Resolve deps for Solana 1.18 platform-tools
-        # The MSRV-aware resolver (.cargo/config.toml + rust-version=1.75) keeps the
-        # whole tree on edition-2021 versions the platform-tools cargo can parse.
-        # Then downgrade the lockfile header to v3 (platform-tools reads v3 only).
-        run: |
-          cargo generate-lockfile
-          echo "===TREE-START==="
-          cargo tree -e normal,build -i block-buffer@0.12.1 2>&1 | head -60
-          echo "===TREE-MID==="
-          cargo tree -e normal,build -i digest@0.11.3 2>&1 | head -60
-          echo "===TREE-END==="
-          sed -i 's/^version = 4$/version = 3/' Cargo.lock
+        run: yarn install
 
       - name: anchor build
         run: anchor build
