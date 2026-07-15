@@ -190,8 +190,6 @@ pub mod vydex_escrow {
     //    комиссия платформы с чаевых НЕ берётся
     // ------------------------------------------------------------------
     pub fn approve_and_release(ctx: Context<ApproveAndRelease>, tip_amount: u64) -> Result<()> {
-        // TEMP DEBUG
-        msg!("DBGPROG status={}", ctx.accounts.escrow.status as u8);
         require!(
             ctx.accounts.escrow.status == EscrowStatus::Delivered,
             EscrowError::InvalidStatus
@@ -646,10 +644,14 @@ pub struct MarkDelivered<'info> {
     pub seller: Signer<'info>,
 }
 
+// NOTE: the Account<..> wrappers here are Box'ed. Deserializing six accounts on
+// the 4KB BPF stack overflowed it (`try_accounts` frame ~4480 bytes), which is
+// undefined behaviour and in practice corrupted the escrow data. Boxing moves the
+// deserialized data to the heap. No constraint is changed by this.
 #[derive(Accounts)]
 pub struct ApproveAndRelease<'info> {
     #[account(seeds = [CONFIG_SEED], bump = config.bump, has_one = fee_vault @ EscrowError::WrongFeeVault)]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 
     #[account(
         mut,
@@ -658,7 +660,7 @@ pub struct ApproveAndRelease<'info> {
         has_one = buyer @ EscrowError::Unauthorized,
         has_one = seller @ EscrowError::Unauthorized
     )]
-    pub escrow: Account<'info, Escrow>,
+    pub escrow: Box<Account<'info, Escrow>>,
 
     #[account(
         mut,
@@ -666,7 +668,7 @@ pub struct ApproveAndRelease<'info> {
         bump,
         token::authority = escrow
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
     pub buyer: Signer<'info>, // релизит ТОЛЬКО покупатель
@@ -679,17 +681,17 @@ pub struct ApproveAndRelease<'info> {
         token::mint = config.usdc_mint,
         token::authority = buyer
     )]
-    pub buyer_token: Account<'info, TokenAccount>,
+    pub buyer_token: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         token::mint = config.usdc_mint,
         token::authority = seller // деньги могут уйти ТОЛЬКО на счёт продавца
     )]
-    pub seller_token: Account<'info, TokenAccount>,
+    pub seller_token: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
-    pub fee_vault: Account<'info, TokenAccount>,
+    pub fee_vault: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -791,7 +793,7 @@ pub struct ResolveDispute<'info> {
         has_one = arbiter @ EscrowError::Unauthorized,
         has_one = fee_vault @ EscrowError::WrongFeeVault
     )]
-    pub config: Account<'info, Config>,
+    pub config: Box<Account<'info, Config>>,
 
     pub arbiter: Signer<'info>, // Squads multisig подписывает через свой vault-PDA
 
@@ -802,7 +804,7 @@ pub struct ResolveDispute<'info> {
         has_one = buyer @ EscrowError::Unauthorized,
         has_one = seller @ EscrowError::Unauthorized
     )]
-    pub escrow: Account<'info, Escrow>,
+    pub escrow: Box<Account<'info, Escrow>>,
 
     #[account(
         mut,
@@ -810,7 +812,7 @@ pub struct ResolveDispute<'info> {
         bump,
         token::authority = escrow
     )]
-    pub vault: Account<'info, TokenAccount>,
+    pub vault: Box<Account<'info, TokenAccount>>,
 
     /// CHECK: rent-получатель + получатель buyer_share
     #[account(mut)]
@@ -824,17 +826,17 @@ pub struct ResolveDispute<'info> {
         token::mint = config.usdc_mint,
         token::authority = buyer
     )]
-    pub buyer_token: Account<'info, TokenAccount>,
+    pub buyer_token: Box<Account<'info, TokenAccount>>,
 
     #[account(
         mut,
         token::mint = config.usdc_mint,
         token::authority = seller
     )]
-    pub seller_token: Account<'info, TokenAccount>,
+    pub seller_token: Box<Account<'info, TokenAccount>>,
 
     #[account(mut)]
-    pub fee_vault: Account<'info, TokenAccount>,
+    pub fee_vault: Box<Account<'info, TokenAccount>>,
 
     pub token_program: Program<'info, Token>,
 }
