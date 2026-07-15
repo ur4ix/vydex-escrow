@@ -149,7 +149,7 @@ pub mod vydex_escrow {
         // Перевод USDC покупателя в vault
         token::transfer(
             CpiContext::new(
-                ctx.accounts.token_program.to_account_info(),
+                ctx.accounts.token_program.key(),
                 Transfer {
                     from: ctx.accounts.buyer_token.to_account_info(),
                     to: ctx.accounts.vault.to_account_info(),
@@ -199,7 +199,7 @@ pub mod vydex_escrow {
         if tip_amount > 0 {
             token::transfer(
                 CpiContext::new(
-                    ctx.accounts.token_program.to_account_info(),
+                    ctx.accounts.token_program.key(),
                     Transfer {
                         from: ctx.accounts.buyer_token.to_account_info(),
                         to: ctx.accounts.seller_token.to_account_info(),
@@ -369,7 +369,7 @@ pub mod vydex_escrow {
         if seller_net > 0 {
             token::transfer(
                 CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
+                    ctx.accounts.token_program.key(),
                     Transfer {
                         from: ctx.accounts.vault.to_account_info(),
                         to: ctx.accounts.seller_token.to_account_info(),
@@ -383,7 +383,7 @@ pub mod vydex_escrow {
         if fee > 0 {
             token::transfer(
                 CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
+                    ctx.accounts.token_program.key(),
                     Transfer {
                         from: ctx.accounts.vault.to_account_info(),
                         to: ctx.accounts.fee_vault.to_account_info(),
@@ -397,7 +397,7 @@ pub mod vydex_escrow {
         if buyer_share > 0 {
             token::transfer(
                 CpiContext::new_with_signer(
-                    ctx.accounts.token_program.to_account_info(),
+                    ctx.accounts.token_program.key(),
                     Transfer {
                         from: ctx.accounts.vault.to_account_info(),
                         to: ctx.accounts.buyer_token.to_account_info(),
@@ -411,7 +411,7 @@ pub mod vydex_escrow {
 
         // Закрыть vault, rent -> покупателю (он платил за создание)
         token::close_account(CpiContext::new_with_signer(
-            ctx.accounts.token_program.to_account_info(),
+            ctx.accounts.token_program.key(),
             CloseAccount {
                 account: ctx.accounts.vault.to_account_info(),
                 destination: ctx.accounts.buyer.to_account_info(),
@@ -463,7 +463,7 @@ fn payout_to_seller<'info>(
 
     token::transfer(
         CpiContext::new_with_signer(
-            token_program.to_account_info(),
+            token_program.key(),
             Transfer {
                 from: vault.to_account_info(),
                 to: seller_token.to_account_info(),
@@ -477,7 +477,7 @@ fn payout_to_seller<'info>(
     if fee > 0 {
         token::transfer(
             CpiContext::new_with_signer(
-                token_program.to_account_info(),
+                token_program.key(),
                 Transfer {
                     from: vault.to_account_info(),
                     to: fee_vault.to_account_info(),
@@ -490,7 +490,7 @@ fn payout_to_seller<'info>(
     }
 
     token::close_account(CpiContext::new_with_signer(
-        token_program.to_account_info(),
+        token_program.key(),
         CloseAccount {
             account: vault.to_account_info(),
             destination: rent_destination.clone(),
@@ -520,7 +520,7 @@ fn refund_to_buyer<'info>(
 
     token::transfer(
         CpiContext::new_with_signer(
-            token_program.to_account_info(),
+            token_program.key(),
             Transfer {
                 from: vault.to_account_info(),
                 to: buyer_token.to_account_info(),
@@ -532,7 +532,7 @@ fn refund_to_buyer<'info>(
     )?;
 
     token::close_account(CpiContext::new_with_signer(
-        token_program.to_account_info(),
+        token_program.key(),
         CloseAccount {
             account: vault.to_account_info(),
             destination: rent_destination.clone(),
