@@ -190,6 +190,14 @@ pub mod vydex_escrow {
     //    комиссия платформы с чаевых НЕ берётся
     // ------------------------------------------------------------------
     pub fn approve_and_release(ctx: Context<ApproveAndRelease>, tip_amount: u64) -> Result<()> {
+        // TEMP DEBUG
+        msg!(
+            "DBGPROG escrow={} status={} order_id={} delivered_at={}",
+            ctx.accounts.escrow.key(),
+            ctx.accounts.escrow.status as u8,
+            ctx.accounts.escrow.order_id,
+            ctx.accounts.escrow.delivered_at
+        );
         require!(
             ctx.accounts.escrow.status == EscrowStatus::Delivered,
             EscrowError::InvalidStatus
